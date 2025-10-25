@@ -26,6 +26,15 @@ export class Player extends Schema {
 
     @type("number")
     ry = 0;
+
+    @type("number")
+    ground = 0;
+
+    @type("number")
+    sit = 0;
+
+    @type("number")
+    anspeed = 0;
 }
 
 
@@ -67,6 +76,15 @@ export class State extends Schema {
         
        
             this.players.get(sessionId).ry = movement.ry;
+
+
+            this.players.get(sessionId).ground = movement.ground;
+        
+        
+            this.players.get(sessionId).sit = movement.sit;
+        
+       
+            this.players.get(sessionId).anspeed = movement.anspeed;
         
     }
 }

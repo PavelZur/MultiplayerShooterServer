@@ -9,27 +9,9 @@ using Colyseus.Schema;
 
 public partial class Player : Schema {
 	[Type(0, "number")]
-	public float px = default(float);
+	public float x = default(float);
 
 	[Type(1, "number")]
-	public float py = default(float);
-
-	[Type(2, "number")]
-	public float pz = default(float);
-
-	[Type(3, "number")]
-	public float vx = default(float);
-
-	[Type(4, "number")]
-	public float vy = default(float);
-
-	[Type(5, "number")]
-	public float vz = default(float);
-
-	[Type(6, "number")]
-	public float rx = default(float);
-
-	[Type(7, "number")]
-	public float ry = default(float);
+	public float y = default(float);
 }
 

@@ -78,11 +78,6 @@ export class StateHandlerRoom extends Room {
     onCreate (options) {
         console.log("StateHandlerRoom created!", options);
 
-<<<<<<< Updated upstream
-        this.onMessage("move", (client, data) => {
-            console.log("StateHandlerRoom received message from", client.sessionId, ":", data);
-            this.state.movePlayer(client.sessionId, data);
-=======
         this.setState(new State());
 
         this.onMessage("move", async (client, data) => {
@@ -99,8 +94,7 @@ export class StateHandlerRoom extends Room {
         this.onMessage("ping", async (client) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
         client.send("pong");
->>>>>>> Stashed changes
-        });
+        })
     }
 
     // onAuth(client, options, req) {

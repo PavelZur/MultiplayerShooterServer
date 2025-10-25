@@ -1,13 +1,10 @@
-import config from "@colyseus/tools";
+import Arena from "@colyseus/arena";
 import { monitor } from "@colyseus/monitor";
-import { playground } from "@colyseus/playground";
-import { auth } from "@colyseus/auth";
 import path from 'path';
 import serveIndex from 'serve-index';
 import express from 'express';
 
 // import { uWebSocketsTransport} from "@colyseus/uwebsockets-transport";
-import "./config/auth";
 
 // Import demo room handlers
 import { LobbyRoom, RelayRoom } from 'colyseus';
@@ -17,10 +14,10 @@ import { AuthRoom } from "./rooms/03-auth";
 import { ReconnectionRoom } from './rooms/04-reconnection';
 import { CustomLobbyRoom } from './rooms/07-custom-lobby-room';
 
-export default config({
-    options: {
-        devMode: true,
-    },
+export default Arena({
+    getId: () => "Your Colyseus App",
+
+    // initializeTransport: (options) => new uWebSocketsTransport(options),
 
     initializeGameServer: (gameServer) => {
         // Define "lobby" room
@@ -57,23 +54,20 @@ export default config({
 
         gameServer.onShutdown(function(){
             console.log(`game server is going down.`);
-        });
+          });
 
 
     },
 
     initializeExpress: (app) => {
-        // (optional) auth module
-        app.use(auth.prefix, auth.routes());
-
-        // (optional) client playground
-        app.use('/playground', playground);
-
-        // (optional) web monitoring panel
-        app.use('/colyseus', monitor());
-
         app.use('/', serveIndex(path.join(__dirname, "static"), {'icons': true}))
         app.use('/', express.static(path.join(__dirname, "static")));
+
+        // app.use(serveIndex(path.join(__dirname, "static"), {'icons': true}))
+        // app.use(express.static(path.join(__dirname, "static")));
+
+        // (optional) attach web monitoring panel
+        app.use('/colyseus', monitor());
     },
 
 

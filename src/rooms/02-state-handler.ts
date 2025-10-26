@@ -99,10 +99,10 @@ export class StateHandlerRoom extends Room {
         this.setState(new State());
 
         this.onMessage("move", async (client, data) => {
-  await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10))); 
-  // задержка 40-60 мс
-  this.state.movePlayer(client.sessionId, data);
-});
+        await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10))); 
+         // задержка 40-60 мс
+         this.state.movePlayer(client.sessionId, data);
+         });
 
       //  this.onMessage("move", (client, data) => {
            // console.log("StateHandlerRoom received message from", client.sessionId, ":", data);
@@ -113,11 +113,20 @@ export class StateHandlerRoom extends Room {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
         client.send("pong");
         })
+
+        this.onMessage("shoot", async (client,data) => {
+            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+        this.broadcast("Shoot",data , {except : client});
+        })
+
+        
     }
 
-    // onAuth(client, options, req) {
-    //     return true;
-    // }
+    
+
+    onAuth(client, options, req) {
+         return true;
+    }
 
     onJoin (client: Client) {
         // client.send("hello", "world");

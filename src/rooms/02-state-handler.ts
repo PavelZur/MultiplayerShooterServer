@@ -119,6 +119,11 @@ export class StateHandlerRoom extends Room {
         this.broadcast("Shoot",data , {except : client});
         })
 
+        this.onMessage("reloadgun", async (client,data) => {
+            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+        this.broadcast("ReloadGun",data , {except : client});
+        })
+
         
     }
 

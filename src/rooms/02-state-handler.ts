@@ -35,6 +35,9 @@ export class Player extends Schema {
 
     @type("number")
     anspeed = 0;
+
+    @type("number")
+    health = 100;
 }
 
 
@@ -86,7 +89,7 @@ export class State extends Schema {
        
             this.players.get(sessionId).anspeed = movement.anspeed;
         
-    }
+    }   
 }
 
 export class StateHandlerRoom extends Room {
@@ -104,11 +107,6 @@ export class StateHandlerRoom extends Room {
          this.state.movePlayer(client.sessionId, data);
          });
 
-      //  this.onMessage("move", (client, data) => {
-           // console.log("StateHandlerRoom received message from", client.sessionId, ":", data);
-    //        this.state.movePlayer(client.sessionId, data);
-    //    });
-
         this.onMessage("ping", async (client) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
         client.send("pong");
@@ -124,7 +122,10 @@ export class StateHandlerRoom extends Room {
         this.broadcast("ReloadGun",data , {except : client});
         })
 
-        
+         this.onMessage("damage", async (client,data) => {
+            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+          this.state.players.get(data.id).health = data.health;
+        })      
     }
 
     

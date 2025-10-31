@@ -1,8 +1,9 @@
 import { Room, Client } from "colyseus";
 import { Schema, type, MapSchema } from "@colyseus/schema";
-import { debug } from "console";
+import { debug, log } from "console";
+import e from "express";
 
-export class Player extends Schema {
+export class MovementData extends Schema {
     @type("number")
     px = Math.floor(Math.random() * 10);
 
@@ -26,21 +27,40 @@ export class Player extends Schema {
 
     @type("number")
     ry = 0;
+}
 
-    @type("number")
-    ground = 0;
+export class MovementStateData extends Schema {
+    @type("boolean")
+    sit = false;
+}
 
-    @type("number")
-    sit = 0;
+export class HealthData extends Schema {
+    @type("int16")
+    curHealth = 1;
 
-    @type("number")
-    anspeed = 0;
+    @type("int16")
+    maxHealth = 1;
+}
 
-    @type("number")
-    health = 100;
-
+export class WeaponData extends Schema {
     @type("uint8")
     weapon = 0;
+}
+
+export class Player extends Schema {
+
+    @type(MovementData)
+    movementData = new MovementData();
+
+    @type(MovementStateData)
+    movementStateData = new MovementStateData();
+
+    @type(HealthData)
+    healthData = new HealthData();
+
+    @type(WeaponData)
+    weaponData = new WeaponData();
+
 }
 
 
@@ -50,117 +70,124 @@ export class State extends Schema {
 
     something = "This attribute won't be sent to the client-side";
 
-    createPlayer(sessionId: string) {
-        this.players.set(sessionId, new Player());
+    createPlayer(sessionId: string, initPlayerData: any) {
+
+        const player = new Player();
+
+        player.healthData.maxHealth = initPlayerData.maxHealth;
+        player.healthData.curHealth = initPlayerData.curHealth;
+        player.weaponData.weapon = initPlayerData.weaponId;
+
+        this.players.set(sessionId, player);
     }
 
     removePlayer(sessionId: string) {
         this.players.delete(sessionId);
     }
 
-    movePlayer (sessionId: string, movement: any) {
-       
-            this.players.get(sessionId).px = movement.px;
-        
-        
-            this.players.get(sessionId).py = movement.py;
-        
-        
-            this.players.get(sessionId).pz = movement.pz;
-        
-        
-            this.players.get(sessionId).vx = movement.vx;
-               
-           
-            this.players.get(sessionId).vy = movement.vy;
-        
-        
-            this.players.get(sessionId).vz = movement.vz;
-        
-        
-            this.players.get(sessionId).rx = movement.rx;
-        
-       
-            this.players.get(sessionId).ry = movement.ry;
+    movePlayer(sessionId: string, movement: any) {
 
+        const movementData = this.players.get(sessionId).movementData;
 
-            this.players.get(sessionId).ground = movement.ground;
-        
-        
-            this.players.get(sessionId).sit = movement.sit;
-        
-       
-            this.players.get(sessionId).anspeed = movement.anspeed;
-        
-    }   
+        movementData.px = movement.px;
+        movementData.py = movement.py;
+        movementData.pz = movement.pz;
+        movementData.vx = movement.vx;
+        movementData.vy = movement.vy;
+        movementData.vz = movement.vz;
+        movementData.rx = movement.rx;
+        movementData.ry = movement.ry;
+    }
 
-    changeWeaponPlayer (sessionId: string, weapon: any) {
-       
-            this.players.get(sessionId).weapon = weapon.id;
-                
-    }   
+    changeWeaponPlayer(sessionId: string, weaponData: any) {
+
+        this.players.get(sessionId).weaponData.weapon = weaponData.id;
+    }
+
+    changeHealthPlayer(client: Client, data: any) {
+
+        const player = this.players.get(data.id);
+        let newHp = player.healthData.curHealth - data.damage;
+
+        if (newHp <= 0) {
+            player.healthData.curHealth = 0;
+            client.send("Die");
+        }
+        else {
+            player.healthData.curHealth = newHp;
+        }
+    }
+
+    changeMoveStatePlayer(sessionId: string, stateData: any) {
+
+        this.players.get(sessionId).movementStateData.sit = stateData.sit;
+
+    }
 }
 
 export class StateHandlerRoom extends Room {
     maxClients = 4;
     state = new State();
 
-    onCreate (options) {
+    onCreate(options) {
         console.log("StateHandlerRoom created!", options);
 
         this.setState(new State());
 
         this.onMessage("move", async (client, data) => {
-        await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10))); 
-         // задержка 40-60 мс
-         this.state.movePlayer(client.sessionId, data);
-         });
+            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+            this.state.movePlayer(client.sessionId, data);
+        });
 
         this.onMessage("ping", async (client) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-        client.send("pong");
+            client.send("pong");
         })
 
-        this.onMessage("shoot", async (client,data) => {
+        this.onMessage("shoot", async (client, data) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-        this.broadcast("Shoot",data, {except : client});
+            this.broadcast("Shoot", data, { except: client });
         })
 
-        this.onMessage("reloadgun", async (client,data) => {
+        this.onMessage("reloadweapon", async (client, data) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-        this.broadcast("ReloadGun",data , {except : client});
+            this.broadcast("ReloadWeapon", data, { except: client });
         })
 
-        this.onMessage("weaponchange", async (client,data) => {
-            console.log(client.sessionId, data);
+        this.onMessage("weaponchange", async (client, data) => {
+            this.state.changeWeaponPlayer(client.sessionId, data);
+        })
+
+        this.onMessage("applydamage", async (client, data) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-         this.state.changeWeaponPlayer(client.sessionId,data);
+            const findClient = this.clients[data.id];
+            this.state.changeHealthPlayer(findClient, data);
         })
 
-         this.onMessage("changehealth", async (client,data) => {
-            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));           
-           this.state.players.get(data.id).health = data.health;
-        })      
+        this.onMessage("statemovement", async (client, data) => {
+            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+            this.state.changeMoveStatePlayer(client.sessionId, data);
+        });
     }
 
-    
+
 
     onAuth(client, options, req) {
-         return true;
+        return true;
     }
 
-    onJoin (client: Client) {
+    onJoin(client: Client, initPlayerData: any) {
         // client.send("hello", "world");
         console.log(client.sessionId, "joined!");
-        this.state.createPlayer(client.sessionId);
+        this.state.createPlayer(client.sessionId, initPlayerData);
     }
 
-    onLeave (client) {
+    onLeave(client) {
         console.log(client.sessionId, "left!");
         this.state.removePlayer(client.sessionId);
     }
 
-    onDispose () {
+    onDispose() {
         console.log("Dispose StateHandlerRoom");
     }
 

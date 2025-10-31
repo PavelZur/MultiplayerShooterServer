@@ -38,6 +38,9 @@ export class Player extends Schema {
 
     @type("number")
     health = 100;
+
+    @type("uint8")
+    weapon = 0;
 }
 
 
@@ -90,6 +93,12 @@ export class State extends Schema {
             this.players.get(sessionId).anspeed = movement.anspeed;
         
     }   
+
+    changeWeaponPlayer (sessionId: string, weapon: any) {
+       
+            this.players.get(sessionId).weapon = weapon.id;
+                
+    }   
 }
 
 export class StateHandlerRoom extends Room {
@@ -114,7 +123,7 @@ export class StateHandlerRoom extends Room {
 
         this.onMessage("shoot", async (client,data) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-        this.broadcast("Shoot",data , {except : client});
+        this.broadcast("Shoot",data, {except : client});
         })
 
         this.onMessage("reloadgun", async (client,data) => {
@@ -122,9 +131,15 @@ export class StateHandlerRoom extends Room {
         this.broadcast("ReloadGun",data , {except : client});
         })
 
-         this.onMessage("damage", async (client,data) => {
+        this.onMessage("weaponchange", async (client,data) => {
+            console.log(client.sessionId, data);
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-          this.state.players.get(data.id).health = data.health;
+         this.state.changeWeaponPlayer(client.sessionId,data);
+        })
+
+         this.onMessage("changehealth", async (client,data) => {
+            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));           
+           this.state.players.get(data.id).health = data.health;
         })      
     }
 

@@ -19,5 +19,8 @@ public partial class Player : Schema {
 
 	[Type(3, "ref", typeof(WeaponData))]
 	public WeaponData weaponData = new WeaponData();
+
+	[Type(4, "ref", typeof(PlayerStateData))]
+	public PlayerStateData playerStatedata = new PlayerStateData();
 }
 

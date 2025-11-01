@@ -5,13 +5,13 @@ import e from "express";
 
 export class MovementData extends Schema {
     @type("number")
-    px = Math.floor(Math.random() * 10);
+    px = 0;
 
     @type("number")
     py = 0;
 
     @type("number")
-    pz = Math.floor(Math.random() * 10);
+    pz = 0;
 
     @type("number")
     vx = 0;
@@ -47,6 +47,11 @@ export class WeaponData extends Schema {
     weapon = 0;
 }
 
+export class PlayerStateData extends Schema {
+    @type("boolean")
+    die = false;
+}
+
 export class Player extends Schema {
 
     @type(MovementData)
@@ -61,6 +66,9 @@ export class Player extends Schema {
     @type(WeaponData)
     weaponData = new WeaponData();
 
+    @type(PlayerStateData)
+    playerStatedata = new PlayerStateData();
+
 }
 
 
@@ -73,6 +81,11 @@ export class State extends Schema {
     createPlayer(sessionId: string, initPlayerData: any) {
 
         const player = new Player();
+
+         player.movementData.px = initPlayerData.px;
+         player.movementData.py = initPlayerData.py;
+         player.movementData.pz = initPlayerData.pz;
+         player.movementData.ry = initPlayerData.ry;
 
         player.healthData.maxHealth = initPlayerData.maxHealth;
         player.healthData.curHealth = initPlayerData.curHealth;
@@ -108,10 +121,10 @@ export class State extends Schema {
 
         const player = this.players.get(data.id);
         let newHp = player.healthData.curHealth - data.damage;
-
+        
         if (newHp <= 0) {
             player.healthData.curHealth = 0;
-            client.send("Die");
+            player.playerStatedata.die = true;
         }
         else {
             player.healthData.curHealth = newHp;
@@ -122,6 +135,27 @@ export class State extends Schema {
 
         this.players.get(sessionId).movementStateData.sit = stateData.sit;
 
+    }
+
+    changeStatePlayer(sessionId: string, stateData: any) {
+
+        this.players.get(sessionId).playerStatedata.die = stateData.die;
+    }
+
+    restartPlayer(sessionId: string, data: any) {
+
+        const player = this.players.get(sessionId);
+
+       // console.log("player.playerStatedata.die", player.playerStatedata.die);
+    //    player.movementData.px = data.px;
+     //   player.movementData.py = data.py;
+      //  player.movementData.pz = data.pz;
+     //   player.movementData.ry = data.ry;
+        player.weaponData.weapon = data.weaponId;
+        player.healthData.curHealth = data.curHealth;
+        player.healthData.maxHealth = data.maxHealth;
+        
+        player.playerStatedata.die = false;
     }
 }
 
@@ -136,6 +170,7 @@ export class StateHandlerRoom extends Room {
 
         this.onMessage("move", async (client, data) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+            
             this.state.movePlayer(client.sessionId, data);
         });
 
@@ -160,13 +195,23 @@ export class StateHandlerRoom extends Room {
 
         this.onMessage("applydamage", async (client, data) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-            const findClient = this.clients[data.id];
+            const findClient = this.clients.find(c => c.id === data.id);      
             this.state.changeHealthPlayer(findClient, data);
         })
 
         this.onMessage("statemovement", async (client, data) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
             this.state.changeMoveStatePlayer(client.sessionId, data);
+        });
+
+        this.onMessage("die", async (client, data) => {
+            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+            this.state.changeStatePlayer(client.sessionId, data);
+        });
+
+         this.onMessage("restart", async (client, data) => {
+            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+            this.state.restartPlayer(client.sessionId, data);
         });
     }
 

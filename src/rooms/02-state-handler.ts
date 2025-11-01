@@ -47,6 +47,14 @@ export class WeaponData extends Schema {
     weapon = 0;
 }
 
+export class ScoreData extends Schema {
+    @type("int16")
+    score = 0;
+
+    @type("string")
+    name = "Afonya";
+}
+
 export class PlayerStateData extends Schema {
     @type("boolean")
     die = false;
@@ -69,6 +77,8 @@ export class Player extends Schema {
     @type(PlayerStateData)
     playerStatedata = new PlayerStateData();
 
+    @type(ScoreData)
+    scoreData = new ScoreData();
 }
 
 
@@ -90,6 +100,7 @@ export class State extends Schema {
         player.healthData.maxHealth = initPlayerData.maxHealth;
         player.healthData.curHealth = initPlayerData.curHealth;
         player.weaponData.weapon = initPlayerData.weaponId;
+        player.scoreData.name = sessionId;
 
         this.players.set(sessionId, player);
     }
@@ -117,14 +128,22 @@ export class State extends Schema {
         this.players.get(sessionId).weaponData.weapon = weaponData.id;
     }
 
-    changeHealthPlayer(client: Client, data: any) {
+    applyDamagePlayer(client: Client, data: any) {
 
         const player = this.players.get(data.id);
+        
+        if (player.playerStatedata.die == true){
+            return;
+        }
+
         let newHp = player.healthData.curHealth - data.damage;
         
         if (newHp <= 0) {
             player.healthData.curHealth = 0;
             player.playerStatedata.die = true;
+            
+            const playerSender = this.players.get(client.sessionId)
+            playerSender.scoreData.score = playerSender.scoreData.score + 1;
         }
         else {
             player.healthData.curHealth = newHp;
@@ -146,11 +165,6 @@ export class State extends Schema {
 
         const player = this.players.get(sessionId);
 
-       // console.log("player.playerStatedata.die", player.playerStatedata.die);
-    //    player.movementData.px = data.px;
-     //   player.movementData.py = data.py;
-      //  player.movementData.pz = data.pz;
-     //   player.movementData.ry = data.ry;
         player.weaponData.weapon = data.weaponId;
         player.healthData.curHealth = data.curHealth;
         player.healthData.maxHealth = data.maxHealth;
@@ -195,8 +209,8 @@ export class StateHandlerRoom extends Room {
 
         this.onMessage("applydamage", async (client, data) => {
             await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-            const findClient = this.clients.find(c => c.id === data.id);      
-            this.state.changeHealthPlayer(findClient, data);
+                  
+            this.state.applyDamagePlayer(client, data);
         })
 
         this.onMessage("statemovement", async (client, data) => {

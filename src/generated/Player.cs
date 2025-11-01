@@ -22,5 +22,8 @@ public partial class Player : Schema {
 
 	[Type(4, "ref", typeof(PlayerStateData))]
 	public PlayerStateData playerStatedata = new PlayerStateData();
+
+	[Type(5, "ref", typeof(ScoreData))]
+	public ScoreData scoreData = new ScoreData();
 }
 

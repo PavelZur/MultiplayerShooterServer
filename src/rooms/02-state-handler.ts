@@ -174,7 +174,7 @@ export class State extends Schema {
 }
 
 export class StateHandlerRoom extends Room {
-    maxClients = 4;
+    maxClients = 30;
     state = new State();
 
     onCreate(options) {

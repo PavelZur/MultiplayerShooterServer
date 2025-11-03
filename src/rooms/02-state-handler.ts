@@ -182,24 +182,19 @@ export class StateHandlerRoom extends Room {
 
         this.setState(new State());
 
-        this.onMessage("move", async (client, data) => {
-            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-            
+        this.onMessage("move", async (client, data) => {       
             this.state.movePlayer(client.sessionId, data);
         });
 
-        this.onMessage("ping", async (client) => {
-            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+        this.onMessage("ping", async (client) => {         
             client.send("pong");
         })
 
-        this.onMessage("shoot", async (client, data) => {
-            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+        this.onMessage("shoot", async (client, data) => {         
             this.broadcast("Shoot", data, { except: client });
         })
 
-        this.onMessage("reloadweapon", async (client, data) => {
-            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+        this.onMessage("reloadweapon", async (client, data) => {       
             this.broadcast("ReloadWeapon", data, { except: client });
         })
 
@@ -207,24 +202,19 @@ export class StateHandlerRoom extends Room {
             this.state.changeWeaponPlayer(client.sessionId, data);
         })
 
-        this.onMessage("applydamage", async (client, data) => {
-            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
-                  
+        this.onMessage("applydamage", async (client, data) => {               
             this.state.applyDamagePlayer(client, data);
         })
 
-        this.onMessage("statemovement", async (client, data) => {
-            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+        this.onMessage("statemovement", async (client, data) => {          
             this.state.changeMoveStatePlayer(client.sessionId, data);
         });
 
-        this.onMessage("die", async (client, data) => {
-            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+        this.onMessage("die", async (client, data) => {         
             this.state.changeStatePlayer(client.sessionId, data);
         });
 
-         this.onMessage("restart", async (client, data) => {
-            await new Promise(resolve => setTimeout(resolve, 50 + (Math.random() * 20 - 10)));
+         this.onMessage("restart", async (client, data) => {       
             this.state.restartPlayer(client.sessionId, data);
         });
     }

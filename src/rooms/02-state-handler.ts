@@ -128,7 +128,7 @@ export class State extends Schema {
         this.players.get(sessionId).weaponData.weapon = weaponData.id;
     }
 
-    applyDamagePlayer(client: Client, data: any) {
+    applyDamagePlayer(client: Client, data: any, room : Room) {
 
         const player = this.players.get(data.id);
         
@@ -144,7 +144,17 @@ export class State extends Schema {
             
             const playerSender = this.players.get(client.sessionId)
             playerSender.scoreData.score = playerSender.scoreData.score + 1;
+
+            const deathData = {
+                nameDie: player.scoreData.name,
+                nameKiller: playerSender.scoreData.name,
+                isHead: data.isHead
+                };
+
+            const jsonData = JSON.stringify(deathData);
+            room.broadcast("DE",jsonData);
         }
+
         else {
             player.healthData.curHealth = newHp;
         }
@@ -203,16 +213,16 @@ export class StateHandlerRoom extends Room {
         })
 
         this.onMessage("applydamage", async (client, data) => {               
-            this.state.applyDamagePlayer(client, data);
+            this.state.applyDamagePlayer(client, data, this);
         })
 
         this.onMessage("statemovement", async (client, data) => {          
             this.state.changeMoveStatePlayer(client.sessionId, data);
         });
 
-        this.onMessage("die", async (client, data) => {         
-            this.state.changeStatePlayer(client.sessionId, data);
-        });
+       // this.onMessage("die", async (client, data) => {         
+       //     this.state.changeStatePlayer(client.sessionId, data);
+       // });
 
          this.onMessage("restart", async (client, data) => {       
             this.state.restartPlayer(client.sessionId, data);
